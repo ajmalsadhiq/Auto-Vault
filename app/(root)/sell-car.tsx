@@ -6,16 +6,16 @@ import * as Location from "expo-location";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -56,7 +56,7 @@ interface FormData {
   galleryImages: string[];
   address: string;
   geolocation: string;
-  contactPhone: string;
+  phone: string;
   contactEmail: string;
 }
 
@@ -165,7 +165,7 @@ const SellCar = () => {
     galleryImages: [],
     address: "",
     geolocation: "",
-    contactPhone: "",
+    phone: "",
     contactEmail: user?.email || "",
   });
 
@@ -259,7 +259,7 @@ const SellCar = () => {
           galleryUris: form.galleryImages,
           address: form.address,
           geolocation: form.geolocation,
-          contactPhone: form.contactPhone,
+          phone: form.phone,
           contactEmail: form.contactEmail,
         },
       });
@@ -392,7 +392,7 @@ const SellCar = () => {
               placeholder="e.g. 13.0827,80.2707" keyboardType="numbers-and-punctuation" />
 
             <Text className="text-base font-rubik-bold text-black-300 mb-3 mt-2">Contact Info</Text>
-            <Field label="Phone" value={form.contactPhone} onChange={(v) => set("contactPhone", v)}
+            <Field label="Phone" value={form.phone} onChange={(v) => set("phone", v)}
               placeholder="e.g. 9876543210" keyboardType="phone-pad" />
             <Field label="Email" value={form.contactEmail} onChange={(v) => set("contactEmail", v)}
               placeholder="you@email.com" keyboardType="email-address" />
@@ -411,7 +411,7 @@ const SellCar = () => {
               <View>
                 <Text className="text-sm font-rubik-bold text-black-300">{user?.name}</Text>
                 <Text className="text-xs font-rubik text-black-100">{form.contactEmail || user?.email}</Text>
-                {form.contactPhone ? <Text className="text-xs font-rubik text-black-100">{form.contactPhone}</Text> : null}
+                {form.phone ? <Text className="text-xs font-rubik text-black-100">{form.phone}</Text> : null}
               </View>
             </View>
 

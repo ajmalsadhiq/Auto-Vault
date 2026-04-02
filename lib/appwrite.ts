@@ -300,11 +300,13 @@ export async function createAgentIfNotExists({
   name,
   email,
   avatar,
+  phone,
 }: {
   userId: string;
   name: string;
   email: string;
   avatar: string;
+  phone: string;
 }): Promise<string> {
   // Check if agent already exists
   const existing = await databases.listDocuments(
@@ -314,7 +316,24 @@ export async function createAgentIfNotExists({
   );
  
   if (existing.documents.length > 0) {
-    return existing.documents[0].$id;
+    const existingAgent = existing.documents[0];
+    
+    // ✅ Update the agent with new phone number (and potentially name/avatar if changed)
+    if (phone) {
+      await databases.updateDocument(
+        config.databaseId!,
+        config.agentsCollectionId!,
+        existingAgent.$id,
+        { 
+          phone,  // Add missing phone number
+          // Optionally update name/avatar if they've changed
+          name, 
+          avatar 
+        }
+      );
+    }
+    
+    return existingAgent.$id;
   }
  
   // Create new agent record
@@ -322,7 +341,7 @@ export async function createAgentIfNotExists({
     config.databaseId!,
     config.agentsCollectionId!,
     ID.unique(),
-    { name, email, avatar }
+    { name, email, avatar, phone }
   );
  
   return agent.$id;
@@ -359,7 +378,7 @@ export async function createCarListing({
     galleryUris: string[];
     address: string;
     geolocation: string;
-    contactPhone: string;
+    phone: string;
     contactEmail: string;
   };
 }) {
@@ -379,6 +398,7 @@ export async function createCarListing({
     name: user.name,
     email: form.contactEmail || user.email,
     avatar: user.avatar,
+    phone: form.phone,
   });
  
   // 4. Create gallery documents and collect their IDs
@@ -419,7 +439,6 @@ export async function createCarListing({
  
   return car;
 }
-
 
 
 
