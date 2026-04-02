@@ -1,3 +1,6 @@
+import icons from "@/constants/icons";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useRef } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -6,28 +9,23 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useEffect } from "react";
-import { router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import images from "@/constants/images";
-import icons from "@/constants/icons";
 
-import Search from "@/components/Search";
+import { Card, FeaturedCard } from "@/components/Cards";
 import Filters from "@/components/Filters";
 import NoResults from "@/components/NoResults";
-import { Card, FeaturedCard } from "@/components/Cards";
+import Search from "@/components/Search";
 
-import { useAppwrite } from "@/lib/useAppwrite";
+import { getCars, getLatestCars } from "@/lib/appwrite";
 import { useGlobalContext } from "@/lib/global-provider";
-import { getLatestCars, getCars } from "@/lib/appwrite";
-import seed from "@/lib/seed";
+import { useAppwrite } from "@/lib/useAppwrite";
 
 const Home = () => {
-  const { user } = useGlobalContext();
+  const { user, featuredVersion } = useGlobalContext();
 
   const params = useLocalSearchParams<{ query?: string; filter?: string; make?: string }>();
 
-  const { data: latestCars, loading: latestCarsLoading } = useAppwrite({
+  const { data: latestCars, loading: latestCarsLoading, refetch: refetchFeatured } = useAppwrite({
     fn: getLatestCars,
   });
 
@@ -51,11 +49,26 @@ const Home = () => {
     });
   }, [params.filter, params.query, params.make]);
 
+  // Only refetch featured when payments page triggers a change
+  useEffect(() => {
+    if (featuredVersion > 0) refetchFeatured({});
+  }, [featuredVersion]);
+
   const handleCardPress = (id: string) => router.push(`/properties/${id}`);
+
+  const listRef = useRef<FlatList>(null);
+
+  const scrollToRecommendations = () => {
+    listRef.current?.scrollToOffset({
+      offset: 490,
+      animated: true,
+    });
+  };
 
   return (
     <SafeAreaView className="h-full bg-white">
       <FlatList
+        ref={listRef}
         data={cars}
         numColumns={2}
         renderItem={({ item }) => (
@@ -76,14 +89,14 @@ const Home = () => {
           <View className="px-5">
             <View className="flex flex-row items-center justify-between mt-5">
               <View className="flex flex-row">
-                <Image
-                  source={{ uri: user?.avatar }}
-                  className="size-12 rounded-full"
-                />
+                <TouchableOpacity onPress={() => router.push("/profile")}>
+                  <Image
+                    source={{ uri: user?.avatar }}
+                    className="size-12 rounded-full"
+                  />
+                </TouchableOpacity>
                 <View className="flex flex-col items-start ml-2 justify-center">
-                  <Text className="text-xs font-rubik text-black-100">
-                    Hello
-                  </Text>
+                  <Text className="text-xs font-rubik text-black-100">Hello</Text>
                   <Text className="text-base font-rubik-medium text-black-300">
                     {user?.name}
                   </Text>
@@ -98,13 +111,9 @@ const Home = () => {
 
             <View className="my-5">
               <View className="flex flex-row items-center justify-between">
-                <Text className="text-xl font-rubik-bold text-black-300">
-                  Featured
-                </Text>
+                <Text className="text-xl font-rubik-bold text-black-300">Featured</Text>
                 <TouchableOpacity onPress={() => router.push("/explore")}>
-                  <Text className="text-base font-rubik-bold text-primary-300">
-                    See all
-                  </Text>
+                  <Text className="text-base font-rubik-bold text-primary-300">See all</Text>
                 </TouchableOpacity>
               </View>
 
@@ -131,16 +140,11 @@ const Home = () => {
 
             <View className="mt-5">
               <View className="flex flex-row items-center justify-between">
-                <Text className="text-xl font-rubik-bold text-black-300">
-                  Our Recommendation
-                </Text>
-                <TouchableOpacity>
-                  <Text className="text-base font-rubik-bold text-primary-300">
-                    See all
-                  </Text>
+                <Text className="text-xl font-rubik-bold text-black-300">Our Recommendation</Text>
+                <TouchableOpacity onPress={scrollToRecommendations}>
+                  <Text className="text-base font-rubik-bold text-primary-300">See all</Text>
                 </TouchableOpacity>
               </View>
-
               <Filters />
             </View>
           </View>

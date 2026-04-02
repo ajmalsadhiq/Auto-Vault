@@ -1,3 +1,5 @@
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -6,15 +8,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useEffect } from "react";
-import { router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import icons from "@/constants/icons";
-import Search from "@/components/Search";
 import { Card } from "@/components/Cards";
 import Filters from "@/components/Filters";
 import NoResults from "@/components/NoResults";
+import Search from "@/components/Search";
+import icons from "@/constants/icons";
 
 import { getCars } from "@/lib/appwrite";
 import { useAppwrite } from "@/lib/useAppwrite";

@@ -65,6 +65,7 @@ export const categories = [
   { title: "Convertible", category: "Convertible" },
   { title: "Truck", category: "Truck" },
   { title: "Bus/Van", category: "Bus/Van" },
+  { title: "Other", category: "Other" }
 ];
 
 export const carMakes = [

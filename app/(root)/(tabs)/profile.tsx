@@ -12,9 +12,8 @@ import {
 import { logout } from "@/lib/appwrite";
 import { useGlobalContext } from "@/lib/global-provider";
 
-import icons from "@/constants/icons";
 import { settings } from "@/constants/data";
-import images from "@/constants/images";
+import icons from "@/constants/icons";
 import { router } from "expo-router";
 
 interface SettingsItemProp {
@@ -87,22 +86,28 @@ const Profile = () => {
         </View>
 
         <View className="flex flex-col mt-10">
-          <SettingsItem icon={icons.calendar} title="My Bookings" />
-          <SettingsItem icon={icons.wallet} title="Payments" />
+          <SettingsItem icon={icons.calendar} title="My Bookings/Likes" onPress={() => router.push("/liked-cars")}/>
+          <SettingsItem icon={icons.wallet} title="Payments" onPress={() => router.push("/payment")} />
         </View>
 
         <View className="flex flex-col mt-5 border-t pt-5 border-primary-200">
-          {settings.slice(2).map((item, index) => (
-            <SettingsItem
-              key={index}
-              {...item}
-              onPress={
-                item.title === "Notifications"
-                  ? () => router.push("/notification")
-                  : undefined
-              }
-            />
-          ))}
+          {settings.slice(2).map((item, index) => {
+            const routes: Record<string, string> = {
+              Notifications: "/notification",
+              Security: "/security",
+              Language: "/language",
+              "Help Center": "/help-center",
+              "Invite Friends": "/invite-friends",
+              "Sell Your Car": "/sell-car",
+            };
+            return (
+              <SettingsItem
+                key={index}
+                {...item}
+                onPress={routes[item.title] ? () => router.push(routes[item.title] as any) : undefined}
+              />
+            );
+          })}
         </View>
 
 
