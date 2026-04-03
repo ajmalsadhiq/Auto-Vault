@@ -15,6 +15,8 @@
 
 [![Download APK](https://img.shields.io/badge/Download_APK-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://expo.dev/accounts/ajmalsadhiq/projects/AutoVault/builds/cf284123-e797-44fb-b7f1-9ef08ccbc141)
 
+download link : https://img.shields.io/badge/Download_APK-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://expo.dev/accounts/ajmalsadhiq/projects/AutoVault/builds/cf284123-e797-44fb-b7f1-9ef08ccbc141
+
 > Open the link on your Android device, download the APK, allow installation from unknown sources, and you're in.
 
 ---
@@ -69,7 +71,7 @@ Key things I implemented : the multi-step sell-car form with image upload to App
 
 ---
 
-## Roadmap
+## Roadmap--(next step)
 
 - [ ] In-app messaging between buyers and sellers
 - [ ] Push notifications for new listings and messages
