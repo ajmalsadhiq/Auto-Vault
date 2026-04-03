@@ -1,21 +1,24 @@
-import { settings } from "@/constants/data";
-import icons from "@/constants/icons";
-import { deleteCarListing, getUserListings, logout } from "@/lib/appwrite";
-import { useGlobalContext } from "@/lib/global-provider";
-import { router } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
-import  { SafeAreaView } from "react-native-safe-area-context";
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   Image,
   ImageSourcePropType,
+  SafeAreaView,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
+import { useState, useEffect, useCallback } from "react";
+import { logout, getUserListings, deleteCarListing, updateUserAvatar } from "@/lib/appwrite";
+import { useGlobalContext } from "@/lib/global-provider";
+import { settings } from "@/constants/data";
+import icons from "@/constants/icons";
+import { router } from "expo-router";
+import * as ImagePicker from 'expo-image-picker';
+import { databases, config } from "@/lib/appwrite";
+import { Query } from "react-native-appwrite";
 
 interface SettingsItemProp {
   icon: ImageSourcePropType;
@@ -47,10 +50,12 @@ const SettingsItem = ({
 );
 
 const Profile = () => {
-  const { user, refetch, refreshCars} = useGlobalContext();
+  const { user, refetch } = useGlobalContext();
   const [userListings, setUserListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [agentAvatar, setAgentAvatar] = useState(user?.avatar);
 
   // Fetch user's listings
   const fetchUserListings = useCallback(async () => {
@@ -70,6 +75,63 @@ const Profile = () => {
     fetchUserListings();
   }, [fetchUserListings]);
 
+  // Fetch agent avatar
+  useEffect(() => {
+    const fetchAgentAvatar = async () => {
+      if (!user?.email) return;
+      try {
+        const agents = await databases.listDocuments(
+          config.databaseId!,
+          config.agentsCollectionId!,
+          [Query.equal("email", user.email)]
+        );
+        if (agents.documents.length > 0 && agents.documents[0].avatar) {
+          setAgentAvatar(agents.documents[0].avatar);
+        }
+      } catch (error) {
+        console.error("Error fetching agent avatar:", error);
+      }
+    };
+    fetchAgentAvatar();
+  }, [user?.email]);
+
+  // Handle avatar change
+  const handleChangeAvatar = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert("Permission needed", "Please grant permission to access your photos");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setUploadingAvatar(true);
+        
+        const newAvatarUrl = await updateUserAvatar(user?.$id!, result.assets[0].uri);
+        
+        // Update local avatar state
+        setAgentAvatar(newAvatarUrl);
+        
+        // Refresh user data
+        await refetch();
+        
+        Alert.alert("Success", "Profile picture updated!");
+      }
+    } catch (error) {
+      console.error("Error changing avatar:", error);
+      Alert.alert("Error", "Failed to update profile picture");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const handleDeleteListing = (carId: string, carName: string) => {
     Alert.alert(
       "Delete Listing",
@@ -83,7 +145,6 @@ const Profile = () => {
             const success = await deleteCarListing({ carId });
             if (success) {
               Alert.alert("Success", "Listing deleted successfully");
-              refreshCars();
               fetchUserListings();
             } else {
               Alert.alert("Error", "Failed to delete listing");
@@ -149,16 +210,26 @@ const Profile = () => {
           </TouchableOpacity>
         </View>
 
-        {/* User Info */}
+        {/* User Info with Edit Button on Avatar Corner */}
         <View className="flex flex-row justify-center mt-5">
           <View className="flex flex-col items-center relative mt-5">
-            <Image
-              source={{ uri: user?.avatar }}
-              className="size-44 relative rounded-full"
-            />
-            <TouchableOpacity className="absolute bottom-11 right-2">
-              <Image source={icons.edit} className="size-9" />
-            </TouchableOpacity>
+            <View className="relative">
+              <Image
+                source={{ uri: agentAvatar }}
+                className="size-44 rounded-full"
+              />
+              <TouchableOpacity 
+                onPress={handleChangeAvatar}
+                className="absolute bottom-0 right-0 bg-primary-300 rounded-full p-2 border-2 border-white"
+                disabled={uploadingAvatar}
+              >
+                {uploadingAvatar ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Image source={icons.edit} className="size-5" tintColor="white" />
+                )}
+              </TouchableOpacity>
+            </View>
             <Text className="text-2xl font-rubik-bold mt-2">{user?.name}</Text>
             <Text className="text-sm text-black-100 mt-1">{user?.email}</Text>
           </View>
@@ -171,7 +242,7 @@ const Profile = () => {
               My Listings
             </Text>
             <TouchableOpacity onPress={fetchUserListings}>
-              <Text className="text-primary-300 text-sm font-rubik-medium"> Refresh</Text>
+              <Text className="text-primary-300 text-sm font-rubik-medium">↻ Refresh</Text>
             </TouchableOpacity>
           </View>
 

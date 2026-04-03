@@ -9,6 +9,7 @@ import {
   Modal,
   Platform,
   ScrollView,
+  Share,
   Text,
   ToastAndroid,
   TouchableOpacity,
@@ -223,6 +224,31 @@ const Property = () => {
   };
 
 
+  const handleShare = async () => {
+    if (!car) {
+      showToast("Car details not loaded yet");
+      return;
+    }
+    
+    const message = `🚗 ${car?.make} ${car?.name}\n\n` +
+      `💰 Price: ₹${car?.price?.toLocaleString()}\n` +
+      `📏 Mileage: ${car?.mileage?.toLocaleString()} km\n` +
+      `👥 Seats: ${car?.seats}\n` +
+      `📍 Location: ${car?.address}\n\n` +
+      `Check out this car on AutoVault!`;
+    
+    try {
+      await Share.share({
+        title: `${car?.make} ${car?.name} - AutoVault`,
+        message: message,
+      });
+    } catch (error) {
+      console.error(error);
+      showToast("Failed to share");
+    }
+  };
+
+
 
 
   return (
@@ -252,12 +278,14 @@ const Property = () => {
               onPress={() => router.back()}
               className="flex flex-row bg-primary-200 rounded-full size-11 items-center justify-center"
             >
-              <Image source={icons.backArrow} className="size-5" />
+              <Image source={icons.backArrow} className="size-5" style={{ tintColor: '#000000' }}/>
             </TouchableOpacity>
 
             <View className="flex flex-row items-center gap-3">
               <LikeButton carId={id!} />
-              <Image source={icons.send} className="size-7" />
+              <TouchableOpacity onPress={handleShare}>
+                <Image source={icons.send} className="size-7" style={{ tintColor: '#000000' }}/>
+              </TouchableOpacity>            
             </View>
           </View>
         </View>

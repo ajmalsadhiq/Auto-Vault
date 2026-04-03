@@ -584,3 +584,31 @@ export async function deleteCarListing({ carId }: { carId: string }) {
     return false;
   }
 }
+
+
+export async function updateUserAvatar(userId: string, imageUri: string): Promise<string> {
+  try {
+    const uploadedUrl = await uploadImage(imageUri);
+    
+    // Update the agent record
+    const agents = await databases.listDocuments(
+      config.databaseId!,
+      config.agentsCollectionId!,
+      [Query.equal("email", (await account.get()).email)]
+    );
+    
+    if (agents.documents.length > 0) {
+      await databases.updateDocument(
+        config.databaseId!,
+        config.agentsCollectionId!,
+        agents.documents[0].$id,
+        { avatar: uploadedUrl }
+      );
+    }
+    
+    return uploadedUrl;
+  } catch (error) {
+    console.error("Error updating avatar:", error);
+    throw error;
+  }
+}

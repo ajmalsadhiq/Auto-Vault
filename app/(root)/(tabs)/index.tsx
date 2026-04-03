@@ -1,6 +1,6 @@
 import icons from "@/constants/icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -16,12 +16,14 @@ import Filters from "@/components/Filters";
 import NoResults from "@/components/NoResults";
 import Search from "@/components/Search";
 
-import { getCars, getLatestCars } from "@/lib/appwrite";
+import { getCars, getLatestCars, databases, config } from "@/lib/appwrite";
 import { useGlobalContext } from "@/lib/global-provider";
 import { useAppwrite } from "@/lib/useAppwrite";
+import { Query } from "react-native-appwrite";
 
 const Home = () => {
   const { user, featuredVersion, carsVersion } = useGlobalContext();
+  const [agentAvatar, setAgentAvatar] = useState(user?.avatar);
 
   const params = useLocalSearchParams<{ query?: string; filter?: string; make?: string }>();
 
@@ -39,6 +41,26 @@ const Home = () => {
     },
     skip: true,
   });
+
+  // Fetch agent avatar
+  useEffect(() => {
+    const fetchAgentAvatar = async () => {
+      if (!user?.email) return;
+      try {
+        const agents = await databases.listDocuments(
+          config.databaseId!,
+          config.agentsCollectionId!,
+          [Query.equal("email", user.email)]
+        );
+        if (agents.documents.length > 0 && agents.documents[0].avatar) {
+          setAgentAvatar(agents.documents[0].avatar);
+        }
+      } catch (error) {
+        console.error("Error fetching agent avatar:", error);
+      }
+    };
+    fetchAgentAvatar();
+  }, [user?.email]);
 
   useEffect(() => {
     refetch({
@@ -103,7 +125,7 @@ const Home = () => {
               <View className="flex flex-row">
                 <TouchableOpacity onPress={() => router.push("/profile")}>
                   <Image
-                    source={{ uri: user?.avatar }}
+                    source={{ uri: agentAvatar }}
                     className="size-12 rounded-full"
                   />
                 </TouchableOpacity>
@@ -163,6 +185,7 @@ const Home = () => {
         )}
       />
     </SafeAreaView>
+    
   );
 };
 
