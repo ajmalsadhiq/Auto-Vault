@@ -21,7 +21,7 @@ import { useGlobalContext } from "@/lib/global-provider";
 import { useAppwrite } from "@/lib/useAppwrite";
 
 const Home = () => {
-  const { user, featuredVersion } = useGlobalContext();
+  const { user, featuredVersion, carsVersion } = useGlobalContext();
 
   const params = useLocalSearchParams<{ query?: string; filter?: string; make?: string }>();
 
@@ -53,6 +53,18 @@ const Home = () => {
   useEffect(() => {
     if (featuredVersion > 0) refetchFeatured({});
   }, [featuredVersion]);
+
+  // Refetch cars when carsVersion changes (after delete/update)
+  useEffect(() => {
+    if (carsVersion > 0) {
+      refetch({
+        filter: params.filter!,
+        query: params.query!,
+        limit: 6,
+        make: params.make!,
+      });
+    }
+  }, [carsVersion]);
 
   const handleCardPress = (id: string) => router.push(`/properties/${id}`);
 

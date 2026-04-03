@@ -18,6 +18,8 @@ interface GlobalContextType {
   toggleLikedCar: (carId: string) => void;
   featuredVersion: number;
   bumpFeatured: () => void;
+  carsVersion: number;  // ✅ Added
+  refreshCars: () => void;  // ✅ Added
 }
 
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
@@ -33,6 +35,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
 
   const [likedCarIds, setLikedCarIds] = useState<Set<string>>(new Set());
   const [featuredVersion, setFeaturedVersion] = useState(0);
+  const [carsVersion, setCarsVersion] = useState(0);  // ✅ Added
 
   useEffect(() => {
     if (!user?.$id) return;
@@ -51,6 +54,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const bumpFeatured = () => setFeaturedVersion((v) => v + 1);
+  const refreshCars = () => setCarsVersion((v) => v + 1);  // ✅ Added
 
   const isLoggedIn = !!user;
 
@@ -65,6 +69,8 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
         toggleLikedCar,
         featuredVersion,
         bumpFeatured,
+        carsVersion,  // ✅ Added
+        refreshCars,  // ✅ Added
       }}
     >
       {children}

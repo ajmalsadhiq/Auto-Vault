@@ -20,7 +20,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // ── Constants ────────────────────────────────────────────────
-const CAR_TYPES = [ "Sedan", "SUV", "Hatchback", "Coupe", "Convertible", "Pickup","Truck", "Bus/Van","Other"];
+const CAR_TYPES = [ "Sedan", "Suv", "Hatchback", "Coupe", "Convertible", "Pickup","Truck", "Bus/Van","Other"];
 const CAR_MAKES = [ "Hyundai", "Honda", "Toyota", "Kia", "Ford", "Volkswagen", "BMW", "Mercedes", "Audi","Nissan", "Other"];
 const PRESET_FEATURES = ["rear-view-camera",
   "parking-sensor", 
@@ -175,7 +175,7 @@ const SellCar = () => {
   // ── Image pickers ────────────────────────────────────────
   const pickMainImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       quality: 0.8,
     });
     if (!result.canceled) set("mainImage", result.assets[0].uri);

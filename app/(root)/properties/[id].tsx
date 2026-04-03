@@ -6,12 +6,13 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Modal,
   Platform,
   ScrollView,
   Text,
   ToastAndroid,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import MapView, { Marker } from 'react-native-maps';
 import Svg, {
@@ -27,7 +28,14 @@ import icons from "@/constants/icons";
 import images from "@/constants/images";
 import { getCarsById } from "@/lib/appwrite";
 import { useAppwrite } from "@/lib/useAppwrite";
-import React from "react";
+import React, { useState } from "react";
+
+const getOptimizedImage = (url: string, width: number = 800) => {
+  if (!url) return url;
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}width=${width}&quality=75`;
+};
+
 
 const CAR_FEATURE_ICONS: Record<string, (props: { size: number }) => React.ReactElement> = {
   "rear-view-camera": ({ size }) => (
@@ -171,6 +179,8 @@ const Property = () => {
   const { id } = useLocalSearchParams<{ id?: string }>();
 
   const windowHeight = Dimensions.get("window").height;
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const { data: car } = useAppwrite({
     fn: getCarsById,
@@ -214,8 +224,6 @@ const Property = () => {
 
 
 
-console.log("Geolocation value:", car?.geolocation);
-console.log("Full car object:", car);
 
   return (
   <View>
@@ -225,9 +233,10 @@ console.log("Full car object:", car);
     >
       <View className="relative w-full" style={{ height: windowHeight / 2 }}>
         <Image
-          source={{ uri: car?.image }}
+          source={{ uri: getOptimizedImage(car?.image, 500) }}
           className="size-full"
           resizeMode="cover"
+          progressiveRenderingEnabled={true} 
         />
         <Image
           source={images.whiteGradient}
@@ -305,7 +314,7 @@ console.log("Full car object:", car);
           <View className="flex flex-row items-center justify-between mt-4">
             <View className="flex flex-row items-center">
               <Image
-                source={{ uri: car?.agent?.avatar }}
+                source={{ uri: getOptimizedImage(car?.agent?.avatar, 100) }}
                 className="size-14 rounded-full"
               />
               <View className="flex flex-col items-start justify-center ml-3">
@@ -382,10 +391,17 @@ console.log("Full car object:", car);
               horizontal
               showsHorizontalScrollIndicator={false}
               renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectedImage(item.image);
+                    setModalVisible(true);
+                  }}
+                >
                 <Image
-                  source={{ uri: item.image }}
+                  source={{ uri: getOptimizedImage(item.image, 300) }}
                   className="size-40 rounded-xl"
                 />
+                </TouchableOpacity>
               )}
               contentContainerClassName="flex gap-4 mt-3"
             />
@@ -450,6 +466,46 @@ console.log("Full car object:", car);
         </TouchableOpacity>
       </View>
     </View>
+    {/* Image Viewer Modal */}
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={modalVisible}
+      onRequestClose={() => setModalVisible(false)}
+    >
+      <View className="flex-1 bg-black/95">
+        {/* Close button (X) */}
+        <TouchableOpacity
+          className="absolute top-12 right-5 z-10 bg-black/50 rounded-full p-2"
+          onPress={() => setModalVisible(false)}
+        >
+          <Text className="text-white text-2xl">✕</Text>
+        </TouchableOpacity>
+        
+        {/* Background tap to close */}
+        <TouchableOpacity 
+          className="flex-1"
+          activeOpacity={1}
+          onPress={() => setModalVisible(false)}
+        >
+          {/* Image container */}
+          <View className="flex-1 justify-center items-center">
+            {selectedImage && (
+              <Image
+                source={{ uri: selectedImage }}
+                style={{ width: Dimensions.get('window').width, height: Dimensions.get('window').height * 0.8 }}
+                resizeMode="contain"
+              />
+            )}
+          </View>
+        </TouchableOpacity>
+        
+        {/* Instructions */}
+        <View className="absolute bottom-10 left-0 right-0 items-center">
+          <Text className="text-white/50 text-xs">Tap anywhere to close</Text>
+        </View>
+      </View>
+    </Modal>
   </View>
 );
 };

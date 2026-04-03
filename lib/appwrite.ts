@@ -1,7 +1,7 @@
+import * as ImageManipulator from 'expo-image-manipulator';
 import * as Linking from 'expo-linking';
 import { openAuthSessionAsync } from "expo-web-browser";
 import { Account, Avatars, Client, Databases, ID, OAuthProvider, Query, Storage } from "react-native-appwrite";
-
 
 export const config = {
     platform: 'com.ajmal.autovault',
@@ -269,15 +269,36 @@ export async function isCarLiked({
  * Upload a local image URI to Appwrite Storage.
  * Returns the public URL of the uploaded file.
  */
+async function compressImage(uri: string): Promise<string> {
+  try {
+    const result = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: 1200 } }],  // Resize to max 1200px width
+      { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+    );
+    return result.uri;
+  } catch (error) {
+    console.error("Image compression failed:", error);
+    return uri; // Return original if compression fails
+  }
+}
+
+
+
+
+
 export async function uploadImage(uri: string): Promise<string> {
-  const fileName = uri.split("/").pop() || `image_${Date.now()}.jpg`;
+  const compressedUri = await compressImage(uri);
+
+
+  const fileName = compressedUri.split("/").pop() || `image_${Date.now()}.jpg`;
   const mimeType = fileName.endsWith(".png") ? "image/png" : "image/jpeg";
  
   const file = {
     name: fileName,
     type: mimeType,
     size: 0, // Appwrite SDK fills this in
-    uri,
+    uri: compressedUri,
   };
  
   const uploaded = await storage.createFile(
@@ -495,6 +516,71 @@ export async function unfeatureCar({ carId }: { carId: string }) {
     return true;
   } catch (error) {
     console.error(error);
+    return false;
+  }
+}
+
+export async function deleteCarListing({ carId }: { carId: string }) {
+  try {
+    // First, get the car to find associated gallery images
+    const car = await databases.getDocument(
+      config.databaseId!,
+      config.carsCollectionId!,
+      carId
+    );
+    
+    // Delete gallery images from storage
+    if (car.gallery && car.gallery.length > 0) {
+      for (const galleryId of car.gallery) {
+        try {
+          const galleryDoc = await databases.getDocument(
+            config.databaseId!,
+            config.galleriesCollectionId!,
+            galleryId
+          );
+          
+          // Extract file ID from image URL and delete from storage
+          if (galleryDoc.image) {
+            const fileId = galleryDoc.image.split('/files/')[1]?.split('/')[0];
+            if (fileId) {
+              await storage.deleteFile(config.bucketId!, fileId);
+            }
+          }
+          
+          // Delete gallery document
+          await databases.deleteDocument(
+            config.databaseId!,
+            config.galleriesCollectionId!,
+            galleryId
+          );
+        } catch (e) {
+          console.log("Error deleting gallery item:", galleryId, e);
+        }
+      }
+    }
+    
+    // Delete main image from storage
+    if (car.image) {
+      const fileId = car.image.split('/files/')[1]?.split('/')[0];
+      if (fileId) {
+        try {
+          await storage.deleteFile(config.bucketId!, fileId);
+        } catch (e) {
+          console.log("Could not delete main image file:", fileId);
+        }
+      }
+    }
+    
+    // Delete the car document
+    await databases.deleteDocument(
+      config.databaseId!,
+      config.carsCollectionId!,
+      carId
+    );
+    
+    return true;
+  } catch (error) {
+    console.error("Error deleting car:", error);
     return false;
   }
 }

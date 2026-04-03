@@ -15,7 +15,7 @@ export const cards = [
     location: "Mumbai, MH",
     price: "$22,000",
     rating: 3,
-    category: "SUVs",
+    category: "Suvs",
     image: images.japan,
   },
   {
@@ -51,14 +51,14 @@ export const featuredCards = [
     price: "$32,000",
     rating: 4.5,
     image: images.japan,
-    category: "SUVs",
+    category: "Suvs",
   },
 ];
 
 export const categories = [
   { title: "All", category: "All" },
   { title: "Sedan", category: "Sedan" },
-  { title: "SUV", category: "SUV" },
+  { title: "Suv", category: "Suv" },
   { title: "Hatchback", category: "Hatchback" },
   { title: "Coupe", category: "Coupe" },
   { title: "Pickup", category: "Pickup" },
